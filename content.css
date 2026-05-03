@@ -1,0 +1,317 @@
+/* ============================================================
+   KodNest AI Solver — content.css
+   Styles for the floating button and modal overlay
+   ============================================================ */
+
+/* ── Variables ─────────────────────────────────────────────── */
+#kodnest-fab,
+#kodnest-modal,
+#kodnest-modal-box,
+#kodnest-modal-header,
+#kodnest-modal-body,
+#kodnest-question-section,
+#kodnest-answer-section,
+#kodnest-btn-row,
+#kodnest-loader,
+#kodnest-error,
+#kodnest-solve-btn,
+#kodnest-clear-btn,
+#kodnest-copy-btn,
+#kodnest-close {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Floating Action Button ─────────────────────────────────── */
+#kodnest-fab {
+  position: fixed !important;
+  bottom: 28px !important;
+  right: 28px !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 20px !important;
+  background: linear-gradient(135deg, #6C63FF 0%, #3ECFCF 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 50px !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.4px !important;
+  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.45) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  user-select: none !important;
+}
+
+#kodnest-fab:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+  box-shadow: 0 8px 28px rgba(108, 99, 255, 0.6) !important;
+}
+
+#kodnest-fab.kn-active {
+  background: linear-gradient(135deg, #3ECFCF 0%, #6C63FF 100%) !important;
+}
+
+.kn-icon {
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+/* ── Modal Overlay ──────────────────────────────────────────── */
+#kodnest-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  background: rgba(10, 10, 30, 0.65) !important;
+  backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease !important;
+}
+
+#kodnest-modal.kn-visible {
+  opacity: 1 !important;
+  pointer-events: all !important;
+}
+
+/* ── Modal Box ──────────────────────────────────────────────── */
+#kodnest-modal-box {
+  background: #1a1a2e !important;
+  border: 1px solid rgba(108, 99, 255, 0.35) !important;
+  border-radius: 16px !important;
+  width: min(640px, 92vw) !important;
+  max-height: 88vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(108,99,255,0.15) !important;
+  animation: kn-slidein 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes kn-slidein {
+  from { transform: translateY(30px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+#kodnest-modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 22px !important;
+  background: linear-gradient(135deg, #6C63FF22, #3ECFCF11) !important;
+  border-bottom: 1px solid rgba(108, 99, 255, 0.2) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #e2e8f0 !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+#kodnest-close {
+  background: rgba(255,255,255,0.08) !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.2s !important;
+}
+
+#kodnest-close:hover {
+  background: rgba(255,80,80,0.25) !important;
+  color: #ff6b6b !important;
+}
+
+/* ── Body ───────────────────────────────────────────────────── */
+#kodnest-modal-body {
+  padding: 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+/* ── Section Labels ─────────────────────────────────────────── */
+#kodnest-question-section label,
+#kodnest-answer-section label {
+  display: block !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.7px !important;
+  color: #7c8db5 !important;
+  margin-bottom: 8px !important;
+}
+
+/* ── Textarea ───────────────────────────────────────────────── */
+#kodnest-question-text {
+  width: 100% !important;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(108, 99, 255, 0.25) !important;
+  border-radius: 10px !important;
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  padding: 12px !important;
+  resize: vertical !important;
+  outline: none !important;
+  transition: border-color 0.2s !important;
+}
+
+#kodnest-question-text:focus {
+  border-color: #6C63FF !important;
+}
+
+/* ── Button Row ─────────────────────────────────────────────── */
+#kodnest-btn-row {
+  display: flex !important;
+  gap: 10px !important;
+}
+
+#kodnest-solve-btn {
+  flex: 1 !important;
+  padding: 11px 0 !important;
+  background: linear-gradient(135deg, #6C63FF, #3ECFCF) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s, transform 0.15s !important;
+}
+
+#kodnest-solve-btn:hover:not(:disabled) {
+  opacity: 0.88 !important;
+  transform: translateY(-1px) !important;
+}
+
+#kodnest-solve-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+#kodnest-clear-btn {
+  padding: 11px 18px !important;
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 10px !important;
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+#kodnest-clear-btn:hover {
+  background: rgba(255,255,255,0.13) !important;
+}
+
+/* ── Answer Box ─────────────────────────────────────────────── */
+#kodnest-answer-text {
+  background: rgba(62, 207, 207, 0.07) !important;
+  border: 1px solid rgba(62, 207, 207, 0.25) !important;
+  border-radius: 10px !important;
+  color: #e2e8f0 !important;
+  font-size: 13.5px !important;
+  line-height: 1.75 !important;
+  padding: 14px !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  max-height: 240px !important;
+  overflow-y: auto !important;
+  margin-bottom: 10px !important;
+}
+
+#kodnest-copy-btn {
+  padding: 9px 18px !important;
+  background: rgba(62, 207, 207, 0.15) !important;
+  border: 1px solid rgba(62, 207, 207, 0.35) !important;
+  border-radius: 8px !important;
+  color: #3ECFCF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+#kodnest-copy-btn:hover {
+  background: rgba(62, 207, 207, 0.28) !important;
+}
+
+/* ── Loader ─────────────────────────────────────────────────── */
+#kodnest-loader {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: #7c8db5 !important;
+  font-size: 14px !important;
+}
+
+.kn-spinner {
+  width: 22px !important;
+  height: 22px !important;
+  border: 3px solid rgba(108, 99, 255, 0.2) !important;
+  border-top-color: #6C63FF !important;
+  border-radius: 50% !important;
+  animation: kn-spin 0.8s linear infinite !important;
+}
+
+@keyframes kn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error ──────────────────────────────────────────────────── */
+#kodnest-error {
+  background: rgba(255, 80, 80, 0.1) !important;
+  border: 1px solid rgba(255, 80, 80, 0.3) !important;
+  border-radius: 10px !important;
+  color: #ff9999 !important;
+  font-size: 13px !important;
+  padding: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* ── Answer Button Row ─────────────────────────────────────── */
+#kodnest-answer-btn-row {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+}
+
+/* ── Auto Fill Button ──────────────────────────────────────── */
+#kodnest-fill-btn {
+  flex: 1 !important;
+  padding: 11px 0 !important;
+  background: linear-gradient(135deg, #10b981, #3ECFCF) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s, transform 0.15s !important;
+  letter-spacing: 0.3px !important;
+}
+
+#kodnest-fill-btn:hover {
+  opacity: 0.88 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ── Fill Message ──────────────────────────────────────────── */
+#kodnest-fill-msg {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  background: rgba(62, 207, 207, 0.08) !important;
+  margin-top: 6px !important;
+}
