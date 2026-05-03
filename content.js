@@ -219,6 +219,7 @@
   }
 
   // ── 10c. Auto-fill code into the page editor ─────────────────
+  // Injects script into page context to access Monaco editor
   function autoFillEditor() {
     const code = extractCode(answerDiv.textContent);
     if (!code) {
@@ -226,113 +227,103 @@
       return;
     }
 
-    // Collect all documents to search (main page + all iframes)
-    const docs = [document];
-    try {
-      document.querySelectorAll("iframe").forEach((iframe) => {
-        try { if (iframe.contentDocument) docs.push(iframe.contentDocument); } catch(e) {}
-      });
-    } catch(e) {}
+    // Store code in a hidden element so the injected script can read it
+    let dataEl = document.getElementById("kodnest-code-data");
+    if (!dataEl) {
+      dataEl = document.createElement("div");
+      dataEl.id = "kodnest-code-data";
+      dataEl.style.display = "none";
+      document.body.appendChild(dataEl);
+    }
+    dataEl.textContent = code;
 
-    let filled = false;
-    let debugInfo = [];
+    // Listen for result from injected script
+    const handler = (e) => {
+      document.removeEventListener("kodnest-fill-result", handler);
+      const result = e.detail;
+      if (result.success) {
+        showFillMsg("✅ Code filled into editor!", true);
+        setTimeout(closeModal, 1500);
+      } else {
+        navigator.clipboard.writeText(code).then(() => {
+          showFillMsg("📋 Copied to clipboard. " + result.info, false);
+        });
+      }
+    };
+    document.addEventListener("kodnest-fill-result", handler);
 
-    for (const doc of docs) {
-      if (filled) break;
-      const tag = doc !== document ? "[iframe] " : "";
+    // Inject script into the PAGE context (not content script isolation)
+    const script = document.createElement("script");
+    script.textContent = `
+    (function() {
+      var code = document.getElementById("kodnest-code-data").textContent;
+      var success = false;
+      var info = "";
 
-      // ── CodeMirror 5 ──
-      const cmEl = doc.querySelector(".CodeMirror");
-      if (cmEl) {
-        debugInfo.push(tag + "Found .CodeMirror");
-        if (cmEl.CodeMirror) {
-          const cm = cmEl.CodeMirror;
-          const saved = {};
-          if (cm._handlers) {
-            for (const k of Object.keys(cm._handlers)) {
-              saved[k] = [...cm._handlers[k]];
-              cm._handlers[k] = [];
-            }
+      // ── Monaco Editor (KodNest uses this) ──
+      if (typeof monaco !== "undefined") {
+        info += "Found monaco. ";
+        var editors = monaco.editor.getEditors ? monaco.editor.getEditors() : [];
+        if (editors.length > 0) {
+          var editor = editors[0];
+          var model = editor.getModel();
+          if (model) {
+            // Select all and replace (looks like a normal edit)
+            var fullRange = model.getFullModelRange();
+            editor.executeEdits("kodnest-ai", [{
+              range: fullRange,
+              text: code,
+              forceMoveMarkers: true
+            }]);
+            success = true;
+            info += "Filled via executeEdits. ";
           }
-          const wasRO = cm.getOption("readOnly");
-          cm.setOption("readOnly", false);
-          cm.setValue(code);
-          setTimeout(() => {
-            cm.setOption("readOnly", wasRO);
-            if (cm._handlers) {
-              for (const k of Object.keys(saved)) cm._handlers[k] = saved[k];
-            }
-          }, 500);
-          filled = true;
-          break;
+        } else {
+          // Try getModels
+          var models = monaco.editor.getModels();
+          if (models.length > 0) {
+            models[0].setValue(code);
+            success = true;
+            info += "Filled via model.setValue. ";
+          }
+        }
+      } else {
+        info += "monaco not found. ";
+      }
+
+      // ── CodeMirror 5 fallback ──
+      if (!success) {
+        var cmEl = document.querySelector(".CodeMirror");
+        if (cmEl && cmEl.CodeMirror) {
+          info += "Found CodeMirror. ";
+          cmEl.CodeMirror.setValue(code);
+          success = true;
         }
       }
 
-      // ── CodeMirror 6 ──
-      const cm6 = doc.querySelector(".cm-editor");
-      if (cm6) {
-        debugInfo.push(tag + "Found .cm-editor");
-        const view = cm6.cmView ? cm6.cmView.view : null;
-        if (view) {
-          view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
-          filled = true; break;
-        }
-      }
-
-      // ── Monaco ──
-      const monacoEl = doc.querySelector(".monaco-editor");
-      if (monacoEl) {
-        debugInfo.push(tag + "Found .monaco-editor");
-        const win = doc.defaultView || window;
-        if (win.monaco) {
-          const model = win.monaco.editor.getModels()[0];
-          if (model) { model.setValue(code); filled = true; break; }
-        }
-      }
-
-      // ── Ace ──
-      const aceEl = doc.querySelector(".ace_editor");
-      if (aceEl) {
-        debugInfo.push(tag + "Found .ace_editor");
-        if (aceEl.env && aceEl.env.editor) {
+      // ── Ace fallback ──
+      if (!success) {
+        var aceEl = document.querySelector(".ace_editor");
+        if (aceEl && aceEl.env && aceEl.env.editor) {
+          info += "Found Ace. ";
           aceEl.env.editor.setValue(code, -1);
-          filled = true; break;
+          success = true;
         }
       }
 
-      // ── Any textarea ──
-      const ta = doc.querySelector('textarea:not([id^="kodnest"])');
-      if (ta) {
-        debugInfo.push(tag + "Found textarea");
-        ta.focus();
-        ta.value = code;
-        ta.dispatchEvent(new Event("input", { bubbles: true }));
-        ta.dispatchEvent(new Event("change", { bubbles: true }));
-        filled = true; break;
-      }
+      // Send result back to content script
+      document.dispatchEvent(new CustomEvent("kodnest-fill-result", {
+        detail: { success: success, info: info }
+      }));
+    })();
+    `;
+    document.documentElement.appendChild(script);
+    script.remove(); // Clean up
 
-      // ── contenteditable divs ──
-      const ce = doc.querySelector('[contenteditable="true"]:not([id^="kodnest"])');
-      if (ce) {
-        debugInfo.push(tag + "Found contenteditable");
-        ce.focus();
-        ce.innerText = code;
-        filled = true; break;
-      }
-    }
-
-    if (filled) {
-      showFillMsg("✅ Code filled into editor!", true);
-      setTimeout(closeModal, 1500);
-    } else {
-      // Copy to clipboard as fallback + show debug info
-      const info = debugInfo.length > 0 ? debugInfo.join(" | ") : "No editor element found on page or iframes";
-      navigator.clipboard.writeText(code).then(() => {
-        showFillMsg("📋 Copied to clipboard. " + info, false);
-      }).catch(() => {
-        showFillMsg("❌ " + info, false);
-      });
-    }
+    // Timeout fallback if injected script doesn't respond
+    setTimeout(() => {
+      document.removeEventListener("kodnest-fill-result", handler);
+    }, 3000);
   }
 
   function showFillMsg(msg, success) {
