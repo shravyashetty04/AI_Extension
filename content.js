@@ -219,7 +219,7 @@
   }
 
   // ── 10c. Auto-fill code into the page editor ─────────────────
-  // Injects script into page context to access Monaco editor
+  // Sends code to inject.js (runs in MAIN world, can access monaco)
   function autoFillEditor() {
     const code = extractCode(answerDiv.textContent);
     if (!code) {
@@ -227,17 +227,7 @@
       return;
     }
 
-    // Store code in a hidden element so the injected script can read it
-    let dataEl = document.getElementById("kodnest-code-data");
-    if (!dataEl) {
-      dataEl = document.createElement("div");
-      dataEl.id = "kodnest-code-data";
-      dataEl.style.display = "none";
-      document.body.appendChild(dataEl);
-    }
-    dataEl.textContent = code;
-
-    // Listen for result from injected script
+    // Listen for result from inject.js
     const handler = (e) => {
       document.removeEventListener("kodnest-fill-result", handler);
       const result = e.detail;
@@ -252,75 +242,12 @@
     };
     document.addEventListener("kodnest-fill-result", handler);
 
-    // Inject script into the PAGE context (not content script isolation)
-    const script = document.createElement("script");
-    script.textContent = `
-    (function() {
-      var code = document.getElementById("kodnest-code-data").textContent;
-      var success = false;
-      var info = "";
+    // Send fill request to inject.js (which runs in page context)
+    document.dispatchEvent(new CustomEvent("kodnest-fill-request", {
+      detail: { code: code }
+    }));
 
-      // ── Monaco Editor (KodNest uses this) ──
-      if (typeof monaco !== "undefined") {
-        info += "Found monaco. ";
-        var editors = monaco.editor.getEditors ? monaco.editor.getEditors() : [];
-        if (editors.length > 0) {
-          var editor = editors[0];
-          var model = editor.getModel();
-          if (model) {
-            // Select all and replace (looks like a normal edit)
-            var fullRange = model.getFullModelRange();
-            editor.executeEdits("kodnest-ai", [{
-              range: fullRange,
-              text: code,
-              forceMoveMarkers: true
-            }]);
-            success = true;
-            info += "Filled via executeEdits. ";
-          }
-        } else {
-          // Try getModels
-          var models = monaco.editor.getModels();
-          if (models.length > 0) {
-            models[0].setValue(code);
-            success = true;
-            info += "Filled via model.setValue. ";
-          }
-        }
-      } else {
-        info += "monaco not found. ";
-      }
-
-      // ── CodeMirror 5 fallback ──
-      if (!success) {
-        var cmEl = document.querySelector(".CodeMirror");
-        if (cmEl && cmEl.CodeMirror) {
-          info += "Found CodeMirror. ";
-          cmEl.CodeMirror.setValue(code);
-          success = true;
-        }
-      }
-
-      // ── Ace fallback ──
-      if (!success) {
-        var aceEl = document.querySelector(".ace_editor");
-        if (aceEl && aceEl.env && aceEl.env.editor) {
-          info += "Found Ace. ";
-          aceEl.env.editor.setValue(code, -1);
-          success = true;
-        }
-      }
-
-      // Send result back to content script
-      document.dispatchEvent(new CustomEvent("kodnest-fill-result", {
-        detail: { success: success, info: info }
-      }));
-    })();
-    `;
-    document.documentElement.appendChild(script);
-    script.remove(); // Clean up
-
-    // Timeout fallback if injected script doesn't respond
+    // Timeout fallback if inject.js doesn't respond in 3s
     setTimeout(() => {
       document.removeEventListener("kodnest-fill-result", handler);
     }, 3000);

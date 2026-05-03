@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ── Gemini setup ────────────────────────────────────────────
-client = genai.Client(api_key="AIzaSyCWPadWLEOG1TjGaROTivuNpW9Lp_0SZew")
+client = genai.Client(api_key="AIzaSyDnt48c8iIp5fzYY1kIp38O82TVUf1Y_jA")
 MODEL = "gemini-2.5-flash"
 MAX_RETRIES = 3
 

@@ -25,6 +25,12 @@
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["inject.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
     }
   ],
   "icons": {
